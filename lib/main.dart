@@ -1,46 +1,46 @@
-import 'package:flutter/material.dart'; // Paket UI utama Flutter
-import 'package:http/http.dart' as http; // Paket HTTP untuk fetch API
-import 'package:google_fonts/google_fonts.dart'; // Paket Google Fonts
-import 'dart:convert'; // Untuk decoding JSON
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
 
 void main() {
-  runApp(MyApp()); // Menjalankan aplikasi
+  runApp(MyApp()); // Menjalankan aplikasi utama
 }
 
+// Widget utama aplikasi
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Root aplikasi dengan MaterialApp
     return MaterialApp(
-      title: 'PokemonApp', // Judul aplikasi
-      debugShowCheckedModeBanner: false, // Hilangkan banner debug
+      title: 'PokemonApp',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.redAccent,
-        ), // Tema warna
-        useMaterial3: true, // Menggunakan Material 3
-        textTheme: GoogleFonts.poppinsTextTheme(), // Font Poppins
+        ), // Warna utama tema
+        useMaterial3: true,
+        textTheme: GoogleFonts.poppinsTextTheme(), // Gunakan font Poppins
       ),
       home: PokemonPage(), // Halaman utama
     );
   }
 }
 
+// Halaman utama: daftar Pokemon
 class PokemonPage extends StatefulWidget {
   @override
-  _PokemonPageState createState() => _PokemonPageState(); // State untuk PokemonPage
+  _PokemonPageState createState() => _PokemonPageState();
 }
 
 class _PokemonPageState extends State<PokemonPage> {
-  List<Pokemon> _pokemons = []; // List semua pokemon
-  List<Pokemon> _filteredPokemons = []; // List pokemon hasil filter
+  List<Pokemon> _pokemons = []; // Semua data Pokemon
+  List<Pokemon> _filteredPokemons = []; // Data yang difilter
   bool _isLoading = false; // Status loading
-  String _error = ''; // Pesan error
+  String _error = ''; // Menyimpan pesan error
   final TextEditingController _searchController =
-      TextEditingController(); // Controller input pencarian
+      TextEditingController(); // Untuk input pencarian
 
+  // Fungsi untuk mengambil data dari API PokeAPI
   Future<void> fetchPokemons() async {
-    // Fetch data pokemon dari API
     setState(() {
       _isLoading = true;
       _error = '';
@@ -48,44 +48,44 @@ class _PokemonPageState extends State<PokemonPage> {
       _filteredPokemons = [];
     });
 
-    final uri = Uri.https('pokeapi.co', '/api/v2/pokemon', {
-      'limit': '100',
-    }); // API endpoint
+    final uri = Uri.https('pokeapi.co', '/api/v2/pokemon', {'limit': '100'});
 
     try {
-      final response = await http.get(uri); // Request GET
+      final response = await http.get(uri); // Ambil data dari API
 
       if (response.statusCode != 200) {
         throw HttpException(
-          'Gagal mengambil data. Status: ${response.statusCode}', // Jika gagal, lempar error
+          'Gagal mengambil data. Status: ${response.statusCode}',
         );
       }
 
-      final jsonResponse = json.decode(response.body); // Decode JSON response
-      final List results = jsonResponse['results']; // Ambil list pokemon
+      final jsonResponse = json.decode(response.body);
+      final List results = jsonResponse['results'];
+
       final pokemons =
           results.asMap().entries.map((entry) {
-            // Map ke model Pokemon
             final index = entry.key;
             final json = entry.value;
-            final id = index + 1; // Hitung ID berdasarkan index (1-based)
+            final id = index + 1;
             final imageUrl =
-                'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$id.png'; // URL gambar
+                'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$id.png';
+
             return Pokemon(
-              name: json['name'], // Nama pokemon
-              url: json['url'], // URL detail
-              imageUrl: imageUrl, // URL gambar
+              name: json['name'],
+              url: json['url'],
+              imageUrl: imageUrl,
             );
           }).toList();
 
-      pokemons.sort((a, b) => a.name.compareTo(b.name)); // Urutkan alfabet
+      pokemons.sort(
+        (a, b) => a.name.compareTo(b.name),
+      ); // Urutkan berdasarkan nama
 
       setState(() {
         _pokemons = List<Pokemon>.from(pokemons);
         _filteredPokemons = _pokemons;
       });
     } catch (e) {
-      // Tangkap error
       setState(() {
         _error = 'Terjadi kesalahan: ${e.toString()}';
       });
@@ -96,8 +96,8 @@ class _PokemonPageState extends State<PokemonPage> {
     }
   }
 
+  // Filter pencarian
   void _filterPokemons(String query) {
-    // Filter list pokemon berdasarkan query
     final filtered =
         _pokemons
             .where((p) => p.name.toLowerCase().contains(query.toLowerCase()))
@@ -110,11 +110,11 @@ class _PokemonPageState extends State<PokemonPage> {
   @override
   void initState() {
     super.initState();
-    fetchPokemons(); // Fetch pokemon saat pertama load
+    fetchPokemons(); // Ambil data saat halaman dibuka
   }
 
+  // Widget untuk kartu tampilan setiap Pokemon
   Widget _buildPokemonCard(Pokemon poke) {
-    // Widget kartu pokemon
     return Card(
       margin: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
       elevation: 3,
@@ -122,27 +122,25 @@ class _PokemonPageState extends State<PokemonPage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: ListTile(
         leading: Image.network(
-          poke.imageUrl, // Tampilkan gambar
+          poke.imageUrl,
           width: 50,
           height: 50,
           errorBuilder:
-              (context, error, stackTrace) =>
-                  Icon(Icons.image_not_supported), // Jika gagal load gambar
+              (context, error, stackTrace) => Icon(Icons.image_not_supported),
         ),
         title: Text(
-          poke.name.toUpperCase(), // Tampilkan nama
+          poke.name.toUpperCase(),
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         ),
-        trailing: Icon(
-          Icons.catching_pokemon,
-          color: Colors.redAccent,
-        ), // Icon pokeball
+        trailing: Icon(Icons.catching_pokemon, color: Colors.redAccent),
         onTap: () {
-          // Navigate ke detail
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => PokemonDetailPage(pokemon: poke),
+              builder:
+                  (context) => PokemonDetailPage(
+                    pokemon: poke,
+                  ), // Navigasi ke halaman detail
             ),
           );
         },
@@ -150,12 +148,12 @@ class _PokemonPageState extends State<PokemonPage> {
     );
   }
 
+  // UI utama halaman PokemonPage
   @override
   Widget build(BuildContext context) {
-    // Build UI halaman utama
     return Scaffold(
       appBar: AppBar(
-        title: Text('PokemonApp'), // Judul appbar
+        title: Text('PokemonApp'),
         centerTitle: true,
         backgroundColor: Colors.redAccent,
         foregroundColor: Colors.white,
@@ -168,11 +166,12 @@ class _PokemonPageState extends State<PokemonPage> {
       ),
       body: Column(
         children: [
+          // Pencarian
           Padding(
             padding: EdgeInsets.all(10),
             child: TextField(
               controller: _searchController,
-              onChanged: _filterPokemons, // Panggil filter saat input berubah
+              onChanged: _filterPokemons,
               decoration: InputDecoration(
                 hintText: 'Cari nama Pokémon',
                 prefixIcon: Icon(Icons.search),
@@ -184,32 +183,30 @@ class _PokemonPageState extends State<PokemonPage> {
               ),
             ),
           ),
+          // Daftar Pokémon
           Expanded(
             child:
                 _isLoading
                     ? Center(
                       child: CircularProgressIndicator(),
-                    ) // Tampilkan loading
+                    ) // Loading indikator
                     : _error.isNotEmpty
                     ? Center(
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Text(
-                          _error, // Tampilkan error
+                          _error,
                           style: TextStyle(color: Colors.red),
-                          textAlign: TextAlign.center,
                         ),
                       ),
                     )
                     : _filteredPokemons.isEmpty
-                    ? Center(
-                      child: Text('Tidak ada Pokémon ditemukan.'),
-                    ) // Tidak ada data
+                    ? Center(child: Text('Tidak ada Pokémon ditemukan.'))
                     : ListView.builder(
                       itemCount: _filteredPokemons.length,
                       itemBuilder: (context, index) {
                         final poke = _filteredPokemons[index];
-                        return _buildPokemonCard(poke); // Tampilkan list
+                        return _buildPokemonCard(poke); // Tampilkan item
                       },
                     ),
           ),
@@ -219,16 +216,18 @@ class _PokemonPageState extends State<PokemonPage> {
   }
 }
 
+// Model data Pokémon
 class Pokemon {
-  final String name; // Nama pokemon
-  final String url; // URL API detail
-  final String imageUrl; // URL gambar
+  final String name;
+  final String url;
+  final String imageUrl;
 
   Pokemon({required this.name, required this.url, required this.imageUrl});
 }
 
+// Halaman detail Pokémon
 class PokemonDetailPage extends StatefulWidget {
-  final Pokemon pokemon; // Data pokemon dikirim
+  final Pokemon pokemon;
 
   PokemonDetailPage({required this.pokemon});
 
@@ -237,53 +236,90 @@ class PokemonDetailPage extends StatefulWidget {
 }
 
 class _PokemonDetailPageState extends State<PokemonDetailPage> {
-  Map<String, dynamic>? _detail; // Data detail
-  bool _isLoading = false; // Status loading
-  String _error = ''; // Pesan error
+  Map<String, dynamic>? _detail; // Menyimpan detail dari API
+  bool _isLoading = false;
+  String _error = '';
 
+  // Ambil data detail dari API
   Future<void> fetchDetail() async {
-    // Fetch detail pokemon
     setState(() {
       _isLoading = true;
       _error = '';
     });
 
-    final uri = Uri.parse(widget.pokemon.url); // URL detail
+    final uri = Uri.parse(widget.pokemon.url);
 
     try {
       final response = await http.get(uri);
-
       if (response.statusCode != 200) {
         throw HttpException(
-          'Gagal mengambil detail. Status: ${response.statusCode}', // Error status
+          'Gagal mengambil detail. Status: ${response.statusCode}',
         );
       }
-
-      final jsonResponse = json.decode(response.body); // Decode JSON
-
+      final jsonResponse = json.decode(response.body);
       setState(() {
         _detail = jsonResponse;
       });
     } catch (e) {
       setState(() {
-        _error = 'Terjadi kesalahan: ${e.toString()}'; // Tampilkan error
+        _error = 'Terjadi kesalahan: ${e.toString()}';
       });
     } finally {
       setState(() {
-        _isLoading = false; // Selesai loading
+        _isLoading = false;
       });
     }
+  }
+
+  // Kapitalisasi string
+  String _capitalize(String text) => text[0].toUpperCase() + text.substring(1);
+
+  // Widget untuk menampilkan stat bar
+  Widget _buildStatBar(String name, int value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$name: $value'),
+          SizedBox(height: 4),
+          LinearProgressIndicator(
+            value: value / 150,
+            minHeight: 8,
+            color: Colors.redAccent,
+            backgroundColor: Colors.grey.shade300,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget untuk menampilkan tipe Pokémon
+  Widget _buildTypes(List types) {
+    return Wrap(
+      spacing: 8,
+      children:
+          types.map<Widget>((type) {
+            return Chip(
+              label: Text(
+                _capitalize(type['type']['name']),
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.redAccent,
+            );
+          }).toList(),
+    );
   }
 
   @override
   void initState() {
     super.initState();
-    fetchDetail(); // Fetch detail saat masuk halaman
+    fetchDetail(); // Ambil data detail saat pertama kali dibuka
   }
 
+  // UI Halaman Detail
   @override
   Widget build(BuildContext context) {
-    // UI detail pokemon
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.pokemon.name.toUpperCase()),
@@ -292,59 +328,84 @@ class _PokemonDetailPageState extends State<PokemonDetailPage> {
       ),
       body:
           _isLoading
-              ? Center(child: CircularProgressIndicator())
+              ? Center(
+                child: CircularProgressIndicator(),
+              ) // Tampilkan loading saat mengambil data
               : _error.isNotEmpty
               ? Center(child: Text(_error, style: TextStyle(color: Colors.red)))
               : _detail == null
               ? Center(child: Text('Tidak ada detail.'))
               : SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Center(
-                        child: Image.network(
-                          _detail!['sprites']['front_default'] ??
-                              '', // Gambar detail
-                          height: 150,
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Gambar Pokémon
+                    Image.network(
+                      _detail!['sprites']['other']['official-artwork']['front_default'],
+                      height: 180,
+                    ),
+                    SizedBox(height: 12),
+                    // Nama dan ID
+                    Text(
+                      '#${_detail!['id']}  ${_capitalize(_detail!['name'])}',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    _buildTypes(_detail!['types']),
+                    SizedBox(height: 16),
+                    // Tinggi dan Berat
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Column(
+                          children: [
+                            Icon(Icons.height),
+                            SizedBox(height: 4),
+                            Text('${_detail!['height'] / 10} m'),
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            Icon(Icons.monitor_weight),
+                            SizedBox(height: 4),
+                            Text('${_detail!['weight'] / 10} kg'),
+                          ],
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 24),
+                    // Statistik
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Stats',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 16),
-                      Text(
-                        'ID: ${_detail!['id']}',
-                        style: TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Height: ${_detail!['height']}',
-                        style: TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Weight: ${_detail!['weight']}',
-                        style: TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Types: ${(_detail!['types'] as List).map((t) => t['type']['name']).join(', ')}',
-                        style: TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 8),
+                    // Tampilkan semua stat
+                    ..._detail!['stats'].map<Widget>((stat) {
+                      return _buildStatBar(
+                        _capitalize(stat['stat']['name']),
+                        stat['base_stat'],
+                      );
+                    }).toList(),
+                  ],
                 ),
               ),
     );
   }
 }
 
+// Kelas custom exception untuk error HTTP
 class HttpException implements Exception {
-  final String message; // Pesan error custom
+  final String message;
   HttpException(this.message);
   @override
   String toString() => 'HttpException: $message';
